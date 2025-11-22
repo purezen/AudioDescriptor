@@ -100,7 +100,7 @@ class NoiseTestScreen(): Screen {
                     dBs = db
                 }
             }) {
-                Text("Start Test")
+                Text("START TEST")
             }
 
             Button(onClick = {
@@ -108,7 +108,65 @@ class NoiseTestScreen(): Screen {
             }) {
                 Text("STOP")
             }
+
+            val navigator = LocalNavigator.currentOrThrow
+            Button(onClick = {
+                navigator.push(TaskSelectionScreen())
+            }) {
+                Text("PROCEED")
+            }
         }
+    }
+}
+
+class TaskSelectionScreen: Screen {
+    @Composable
+    override fun Content() {
+        Column {
+
+            Text("Select task type")
+
+
+            val navigator = LocalNavigator.currentOrThrow
+            Button(onClick = {
+                navigator.push(TextReadingScreen())
+            }) {
+                Text("Text Reading")
+            }
+
+            Button(onClick = {
+                navigator.push(ImageDescriptionScreen())
+            }) {
+                Text("Image Description")
+            }
+
+            Button(onClick = {
+                navigator.push(PhotoCaptureScreen())
+            }) {
+                Text("Photo Capture")
+            }
+        }
+    }
+}
+
+class TextReadingScreen: Screen {
+    @Composable
+    override fun Content() {
+        Text("Text Reading Screen")
+    }
+}
+
+class ImageDescriptionScreen: Screen {
+    @Composable
+    override fun Content() {
+        Text("Image Description Screen")
+    }
+}
+
+class PhotoCaptureScreen: Screen {
+    @Composable
+    override fun Content() {
+        Text("Photo Capture Screen")
     }
 }
 
