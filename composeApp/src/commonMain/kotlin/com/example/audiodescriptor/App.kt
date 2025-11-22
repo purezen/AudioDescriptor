@@ -14,6 +14,14 @@ import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
+expect class AudioRecorder {
+    fun start(outputFile: String? = null)
+    fun stop()
+}
+
+@Composable
+expect fun rememberAudioRecorder(): AudioRecorder
+
 @Composable
 @Preview
 fun App() {
@@ -48,11 +56,26 @@ class HomeScreen() : Screen {
 class NoiseTestScreen(): Screen {
     @Composable
     override fun Content() {
-        Text("Decibel meter")
-        Button(onClick = {
-            //
-        }) {
-            Text("Start Test")
+        val audioRecorder = rememberAudioRecorder()
+
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            Text("Decibel meter")
+
+            Button(onClick = {
+                audioRecorder.start()
+            }) {
+                Text("Start Test")
+            }
+
+            Button(onClick = {
+                audioRecorder.stop()
+            }) {
+                Text("STOP")
+            }
         }
     }
 }

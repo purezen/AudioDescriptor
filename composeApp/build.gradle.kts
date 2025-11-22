@@ -29,6 +29,7 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
+            implementation("com.google.accompanist:accompanist-permissions:0.34.0")
         }
         commonMain.dependencies {
             implementation(libs.voyager.navigator)
