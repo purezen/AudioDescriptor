@@ -6,16 +6,21 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import co.touchlab.kermit.Logger
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 expect class AudioRecorder {
-    fun start(outputFile: String? = null)
+    fun start(outputFile: String? = null, onProgress: (Double) -> Unit)
     fun stop()
 }
 
@@ -58,6 +63,8 @@ class NoiseTestScreen(): Screen {
     override fun Content() {
         val audioRecorder = rememberAudioRecorder()
 
+        var dBs by remember { mutableStateOf(0.0)  }
+
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -65,8 +72,13 @@ class NoiseTestScreen(): Screen {
 
             Text("Decibel meter")
 
+            Text("Current Decibels: ${dBs}")
+
             Button(onClick = {
-                audioRecorder.start()
+                audioRecorder.start { db ->
+                    Logger.d("deciBel reading: ${db}")
+                    dBs = db
+                }
             }) {
                 Text("Start Test")
             }
