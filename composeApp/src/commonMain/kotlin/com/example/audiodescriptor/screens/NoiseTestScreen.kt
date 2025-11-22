@@ -39,6 +39,8 @@ class NoiseTestScreen(): Screen {
         var dBs by remember { mutableStateOf(0.0) }
         val animatedDBs by animateFloatAsState(targetValue = dBs.toFloat())
 
+        var isRecording by remember { mutableStateOf(false) }
+
         Column(
             modifier = Modifier.Companion.fillMaxSize(),
             horizontalAlignment = Alignment.Companion.CenterHorizontally,
@@ -56,22 +58,29 @@ class NoiseTestScreen(): Screen {
             Text("Current Decibels: ${animatedDBs.roundToInt()}")
 
             Button(onClick = {
-                audioRecorder.start { db ->
-                    Logger.Companion.d("deciBel reading: ${db}")
-                    dBs = db
+                if (!isRecording) {
+                    audioRecorder.start { db ->
+                        Logger.Companion.d("deciBel reading: ${db}")
+                        dBs = db
+                    }
+                } else {
+                    audioRecorder.stop()
+                    dBs = 0.0
                 }
-            }) {
-                Text("START TEST")
-            }
 
-            Button(onClick = {
-                audioRecorder.stop()
+                isRecording = !isRecording
             }) {
-                Text("STOP")
+                Text(if (isRecording) "STOP TEST" else "START TEST")
             }
 
             val navigator = LocalNavigator.currentOrThrow
             Button(onClick = {
+                if (isRecording) {
+                    dBs = 0.0
+                    audioRecorder.stop()
+                    isRecording = false
+                }
+
                 navigator.push(TaskSelectionScreen())
             }) {
                 Text("PROCEED")
