@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -42,7 +44,11 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
 // 'expect' declarations have to be mentioned here only
 expect class AudioRecorder {
@@ -53,11 +59,14 @@ expect class AudioRecorder {
 @Composable
 expect fun rememberAudioRecorder(): AudioRecorder
 
+@Composable
+expect fun getCacheDirectoryPath(): String
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 @Preview
 fun App(
-    prefs: DataStore<Preferences>
+    prefs: DataStore<Preferences>,
 ) {
     Scaffold(topBar = {
         TopAppBar(
@@ -76,47 +85,45 @@ fun App(
     }
 }
 
+@Serializable
+data class RecordingData(
+    val taskType: String,
+    val text: String,
+    val audioPath: String,
+    val duration_sec: Int,
+    val timestamp: String,
+)
+
 class TextReadingScreen(private val prefs: DataStore<Preferences>): Screen {
+    @OptIn(ExperimentalTime::class)
     @Composable
     override fun Content() {
         var readingText by remember { mutableStateOf("Loading Text.. ") }
 
-//        val audioRecorder = rememberAudioRecorder()
-//        var isRecording by remember { mutableStateOf(false) }
+        val audioRecorder = rememberAudioRecorder()
+        var isRecording by remember { mutableStateOf(false) }
+        val cacheDir = getCacheDirectoryPath()
+        var currentRecordingPath by remember { mutableStateOf<String?>(null) }
+        var recordingStartTime by remember { mutableStateOf(0L) }
 
         val dataStore = prefs
         val scope = rememberCoroutineScope()
-        val fetchedTextKey = stringPreferencesKey("fetched_text")
+        val recordingsListKey = stringPreferencesKey("recordings_list")
+        var savedRecordings by remember { mutableStateOf<List<RecordingData>>(emptyList()) }
 
         LaunchedEffect(Unit) {
-            val savedText = dataStore.data.map { preferences ->
-                preferences[fetchedTextKey]
-            }.first()
-
-            if (savedText != null) {
-                readingText = savedText
-                Logger.d("Loaded text from DataStore.")
-            } else {
-                Logger.d("No text found in DataStore.")
-                try {
-                    val networkText = getData()
-                    readingText = networkText
-
-                    scope.launch {
-                        dataStore.edit { settings ->
-                            settings[fetchedTextKey] = networkText
-                        }
-                    }
-                } catch (e: Exception) {
-                    Logger.d(e.toString())
-                    readingText = "Error loading text."
-                }
-            }
-
             try {
                 readingText = getData()
             } catch (e: Exception) {
-                Logger.d(e.toString())
+                Logger.e(e.toString())
+            }
+
+            val savedJson = dataStore.data.map {
+                it[recordingsListKey]
+            }.first()
+            if (savedJson != null) {
+                Logger.d("Saved JSON: $")
+                savedRecordings = Json.decodeFromString<List<RecordingData>>(savedJson)
             }
         }
 
@@ -129,17 +136,39 @@ class TextReadingScreen(private val prefs: DataStore<Preferences>): Screen {
                 text = readingText,
                 style = MaterialTheme.typography.bodyLarge
             )
-//
-//            Button(onClick = {
-//                if (isRecording) {
-//                    audioRecorder.stop()
-//                } else {
-//                    audioRecorder.start("recording.")
-//                }
-//                isRecording = !isRecording
-//            }) {
-//                Text(if (isRecording) "STOP RECORDING" else "START READING")
-//            }
+
+            Button(onClick = {
+                if (isRecording) {
+                    audioRecorder.stop()
+//                    val duration = (System.currentTimeMillis() - )
+
+                    scope.launch {
+                        currentRecordingPath?.let { path ->
+                            val newRecording = RecordingData(
+                                taskType = "text_reading",
+                                text = readingText,
+                                audioPath = path,
+                                duration_sec = 10,
+                                timestamp = "date"
+                            )
+
+                            val updatedList = savedRecordings + newRecording
+                            dataStore.edit { settings ->
+                                settings[recordingsListKey] = Json.encodeToString(updatedList)
+                            }
+                            savedRecordings = updatedList
+                        }
+                    }
+                } else {
+                    val path = "$cacheDir/record_${Clock.System.now().toEpochMilliseconds()}.mp4"
+                    currentRecordingPath = path
+                    recordingStartTime = Clock.System.now().toEpochMilliseconds()
+                    audioRecorder.start(path) {}
+                }
+                isRecording = !isRecording
+            }) {
+                Text(if (isRecording) "STOP RECORDING" else "START READING")
+            }
         }
     }
 
