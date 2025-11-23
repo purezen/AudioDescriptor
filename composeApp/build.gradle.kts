@@ -33,6 +33,8 @@ kotlin {
             implementation("com.google.accompanist:accompanist-permissions:0.34.0")
         }
         commonMain.dependencies {
+            implementation("androidx.datastore:datastore:1.2.0")
+            implementation("androidx.datastore:datastore-preferences:1.2.0")
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.cio)
             implementation(libs.ktor.client.content.negotiation)

@@ -16,11 +16,16 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
@@ -34,6 +39,9 @@ import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 // 'expect' declarations have to be mentioned here only
@@ -48,7 +56,9 @@ expect fun rememberAudioRecorder(): AudioRecorder
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 @Preview
-fun App() {
+fun App(
+    prefs: DataStore<Preferences>
+) {
     Scaffold(topBar = {
         TopAppBar(
             colors = topAppBarColors(
@@ -61,17 +71,48 @@ fun App() {
         )
     })  { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
-            Navigator(TextReadingScreen())
+            Navigator(TextReadingScreen(prefs))
         }
     }
 }
 
-class TextReadingScreen: Screen {
+class TextReadingScreen(private val prefs: DataStore<Preferences>): Screen {
     @Composable
     override fun Content() {
         var readingText by remember { mutableStateOf("Loading Text.. ") }
 
+//        val audioRecorder = rememberAudioRecorder()
+//        var isRecording by remember { mutableStateOf(false) }
+
+        val dataStore = prefs
+        val scope = rememberCoroutineScope()
+        val fetchedTextKey = stringPreferencesKey("fetched_text")
+
         LaunchedEffect(Unit) {
+            val savedText = dataStore.data.map { preferences ->
+                preferences[fetchedTextKey]
+            }.first()
+
+            if (savedText != null) {
+                readingText = savedText
+                Logger.d("Loaded text from DataStore.")
+            } else {
+                Logger.d("No text found in DataStore.")
+                try {
+                    val networkText = getData()
+                    readingText = networkText
+
+                    scope.launch {
+                        dataStore.edit { settings ->
+                            settings[fetchedTextKey] = networkText
+                        }
+                    }
+                } catch (e: Exception) {
+                    Logger.d(e.toString())
+                    readingText = "Error loading text."
+                }
+            }
+
             try {
                 readingText = getData()
             } catch (e: Exception) {
@@ -88,6 +129,17 @@ class TextReadingScreen: Screen {
                 text = readingText,
                 style = MaterialTheme.typography.bodyLarge
             )
+//
+//            Button(onClick = {
+//                if (isRecording) {
+//                    audioRecorder.stop()
+//                } else {
+//                    audioRecorder.start("recording.")
+//                }
+//                isRecording = !isRecording
+//            }) {
+//                Text(if (isRecording) "STOP RECORDING" else "START READING")
+//            }
         }
     }
 
@@ -142,11 +194,11 @@ class TaskSelectionScreen: Screen {
 
 
             val navigator = LocalNavigator.currentOrThrow
-            Button(onClick = {
-                navigator.push(TextReadingScreen())
-            }) {
-                Text("Text Reading")
-            }
+//            Button(onClick = {
+//                navigator.push(TextReadingScreen())
+//            }) {
+//                Text("Text Reading")
+//            }
 
             Button(onClick = {
                 navigator.push(ImageDescriptionScreen())
