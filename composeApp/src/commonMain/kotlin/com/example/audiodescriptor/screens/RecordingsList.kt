@@ -93,25 +93,22 @@ fun RecordingListItem(recording: RecordingData) {
             verticalArrangement = Arrangement.spacedBy(4.dp) // Space between text lines
         ) {
             Text(
-                text = "Task: ${recording.taskType}",
-                style = MaterialTheme.typography.titleMedium,
-                fontSize = 18.sp // Slightly larger font for the title
+                text = "Task: ${recording.audioPath.substringAfterLast('/')}",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant // Softer color
             )
             Spacer(modifier = Modifier.Companion.height(4.dp))
             Text(
-                text = "File: ${recording.audioPath.substringAfterLast('/')}",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant // Softer color
-            )
-            Text(
-                text = "Date: ${recording.timestamp}",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                text = "Type: ${recording.taskType}",
+                style = MaterialTheme.typography.bodySmall
             )
             Text(
                 text = "Duration: ${recording.duration_sec} seconds",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                style = MaterialTheme.typography.bodySmall
+            )
+            Text(
+                text = "Date: ${recording.timestamp}",
+                style = MaterialTheme.typography.bodySmall
             )
         }
     }
