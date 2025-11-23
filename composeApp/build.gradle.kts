@@ -32,6 +32,8 @@ kotlin {
             implementation("com.google.accompanist:accompanist-permissions:0.34.0")
         }
         commonMain.dependencies {
+            implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.cio)
             implementation("co.touchlab:kermit:2.0.4")
             implementation(libs.voyager.navigator)
             implementation(libs.voyager.screenmodel)

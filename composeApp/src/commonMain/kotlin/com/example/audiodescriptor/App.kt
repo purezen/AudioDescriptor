@@ -2,10 +2,7 @@ package com.example.audiodescriptor
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -15,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -23,7 +21,12 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import co.touchlab.kermit.Logger
 import com.example.audiodescriptor.screens.NoiseTestScreen
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.request.get
+import io.ktor.client.statement.HttpResponse
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 // 'expect' declarations have to be mentioned here only
@@ -51,8 +54,30 @@ fun App() {
         )
     })  { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
-            Navigator(HomeScreen())
+            Navigator(TextReadingScreen())
         }
+    }
+}
+
+class TextReadingScreen: Screen {
+    @Composable
+    override fun Content() {
+        Text("Text Reading Screen")
+
+        LaunchedEffect(Unit) {
+            try {
+                Logger.d(getData().toString())
+            } catch (e: Exception) {
+                Logger.d(e.toString())
+            }
+        }
+    }
+
+    suspend fun getData(): HttpResponse {
+        val client = HttpClient(CIO)
+        val response: HttpResponse = client.get("https://dummyjson.com/products")
+        client.close()
+        return response
     }
 }
 
@@ -109,13 +134,6 @@ class TaskSelectionScreen: Screen {
                 Text("Photo Capture")
             }
         }
-    }
-}
-
-class TextReadingScreen: Screen {
-    @Composable
-    override fun Content() {
-        Text("Text Reading Screen")
     }
 }
 
