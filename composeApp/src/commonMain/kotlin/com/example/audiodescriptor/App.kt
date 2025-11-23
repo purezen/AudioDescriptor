@@ -80,7 +80,7 @@ fun App(
         )
     })  { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
-            Navigator(TextReadingScreen(prefs))
+            Navigator(HomeScreen(prefs))
         }
     }
 }
@@ -186,7 +186,7 @@ class TextReadingScreen(private val prefs: DataStore<Preferences>): Screen {
     }
 }
 
-class HomeScreen() : Screen {
+class HomeScreen(private val prefs: DataStore<Preferences>) : Screen {
     @Composable
     override fun Content() {
         Column(
@@ -206,15 +206,15 @@ class HomeScreen() : Screen {
 
             val navigator = LocalNavigator.currentOrThrow
             Button(onClick = {
-                navigator.push(NoiseTestScreen())
+                navigator.push(NoiseTestScreen(prefs))
             }) {
                 Text("START SAMPLE TASK")
             }
         }
-        }
+    }
 }
 
-class TaskSelectionScreen: Screen {
+class TaskSelectionScreen(private val prefs: DataStore<Preferences>): Screen {
     @Composable
     override fun Content() {
         Column {
@@ -223,11 +223,11 @@ class TaskSelectionScreen: Screen {
 
 
             val navigator = LocalNavigator.currentOrThrow
-//            Button(onClick = {
-//                navigator.push(TextReadingScreen())
-//            }) {
-//                Text("Text Reading")
-//            }
+            Button(onClick = {
+                navigator.push(TextReadingScreen(prefs))
+            }) {
+                Text("Text Reading")
+            }
 
             Button(onClick = {
                 navigator.push(ImageDescriptionScreen())

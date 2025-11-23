@@ -23,6 +23,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -31,7 +33,7 @@ import com.example.audiodescriptor.TaskSelectionScreen
 import com.example.audiodescriptor.rememberAudioRecorder
 import kotlin.math.roundToInt
 
-class NoiseTestScreen(): Screen {
+class NoiseTestScreen(private val prefs: DataStore<Preferences>): Screen {
     @Composable
     override fun Content() {
         val audioRecorder = rememberAudioRecorder()
@@ -81,7 +83,7 @@ class NoiseTestScreen(): Screen {
                     isRecording = false
                 }
 
-                navigator.push(TaskSelectionScreen())
+                navigator.push(TaskSelectionScreen(prefs))
             }) {
                 Text("PROCEED")
             }
