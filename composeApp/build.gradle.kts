@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    kotlin("plugin.serialization").version("2.2.20")
 }
 
 kotlin {
@@ -34,6 +35,8 @@ kotlin {
         commonMain.dependencies {
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.cio)
+            implementation(libs.ktor.client.content.negotiation)
+            implementation(libs.ktor.serialization.kotlinx.json)
             implementation("co.touchlab:kermit:2.0.4")
             implementation(libs.voyager.navigator)
             implementation(libs.voyager.screenmodel)

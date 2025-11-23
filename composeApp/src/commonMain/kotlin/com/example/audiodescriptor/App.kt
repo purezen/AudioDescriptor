@@ -13,6 +13,10 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -22,11 +26,14 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import co.touchlab.kermit.Logger
+import com.example.audiodescriptor.data.DummyText
 import com.example.audiodescriptor.screens.NoiseTestScreen
 import io.ktor.client.HttpClient
+import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
-import io.ktor.client.statement.HttpResponse
+import io.ktor.serialization.kotlinx.json.json
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 // 'expect' declarations have to be mentioned here only
@@ -62,22 +69,39 @@ fun App() {
 class TextReadingScreen: Screen {
     @Composable
     override fun Content() {
-        Text("Text Reading Screen")
+        var readingText by remember { mutableStateOf("Loading Text.. ") }
 
         LaunchedEffect(Unit) {
             try {
-                Logger.d(getData().toString())
+                readingText = getData()
             } catch (e: Exception) {
                 Logger.d(e.toString())
             }
         }
+
+        Column(
+            modifier = Modifier.fillMaxSize().padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text("Text Reading Screen")
+            Text(
+                text = readingText,
+                style = MaterialTheme.typography.bodyLarge
+            )
+        }
     }
 
-    suspend fun getData(): HttpResponse {
-        val client = HttpClient(CIO)
-        val response: HttpResponse = client.get("https://dummyjson.com/products")
+    suspend fun getData(): String {
+        val client = HttpClient(CIO) {
+            install(ContentNegotiation) {
+                json()
+            }
+        }
+
+        val response: DummyText = client.get("https://dummyjson.com/products").body()
         client.close()
-        return response
+        val products = response.products?.get(0)?.description
+        return products ?: "No Products"
     }
 }
 
@@ -89,11 +113,13 @@ class HomeScreen() : Screen {
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Let's start with a sample task for practice",
+            Text(
+                "Let's start with a sample task for practice",
                 style = MaterialTheme.typography.headlineMedium,
             )
 
-            Text("Pehele hum ek sample task karte hain",
+            Text(
+                "Pehele hum ek sample task karte hain",
                 style = MaterialTheme.typography.headlineSmall,
             )
 
